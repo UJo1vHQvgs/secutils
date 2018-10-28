@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>AES</title>
+<script src="crypto-js.js"></script>
+<script>
+let code = (function(){
+    return{
+      encryptMessage: function(messageToencrypt = '', secretkey = ''){
+        var encryptedMessage = CryptoJS.AES.encrypt(messageToencrypt, secretkey);
+        return encryptedMessage.toString();
+      },
+      decryptMessage: function(encryptedMessage = '', secretkey = ''){
+        var decryptedBytes = CryptoJS.AES.decrypt(encryptedMessage, secretkey);
+        var decryptedMessage = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+        return decryptedMessage;
+      }
+    }
+})();
+
+function doEncrypt() {
+  var aesKey = document.getElementById('aesKey').value;
+  var clearText = document.getElementById('clearText').value;
+  document.getElementById('encryptedText').value =
+   lineLength(code.encryptMessage(clearText, aesKey));
+}
+
+function doDecrypt() {
+  var aesKey = document.getElementById('aesKey').value;
+  var encryptedText = document.getElementById('encryptedText').value;
+  encryptedText = encryptedText.replace(/\n/g,'');
+  var clearText = code.decryptMessage(encryptedText, aesKey);
+  document.getElementById('clearText').value = clearText;
+}
+
+function lineLength(text) {
+  if (text.length <= 64)
+     return text
+  var array = text.match(/.{1,64}/g);
+  var newText = ''+array[0];
+  for ( i = 1; i < array.length; i ++ ) {
+    newText = newText + '\n' + array[i];
+  }
+  return newText;
+}
+
+function generateAesKey() {
+  var subject = document.getElementById('subject').value;
+  var password = document.getElementById('password').value;
+  var subjHash = CryptoJS.MD5(subject+password).toString();
+  console.log('subject = ' + subject + ', subjHash = ' + subjHash);
+  document.getElementById('subjHash').value = subjHash;
+  var aesKey = CryptoJS.SHA256(subjHash).toString();
+  document.getElementById('aesKey').value = aesKey;
+}
+</script>
+<style>
+table td { font-family: arial; font-size: 10pt; }
+</style>
+</head>
+
+<body>
+<table border="0" cellpadding=“3” cellspacing=“0”>
+  <tr>
+    <td>
+        <table border="0" cellpadding="3" cellsapcing="0">
+          <tr>
+            <td>Subject:</td><td colspan="2"><input id="subject" size="30"></td>
+          </tr>
+          <tr>
+            <td>Password:</td><td><input id="password" size="50"></td>
+            <td><button onclick="javascript:generateAesKey()">Generate</button></td>
+          </tr>
+          <tr>
+            <td>AES Key:</td><td colspan="2"><input id="aesKey" size="70" readonly></td>
+          </tr>
+          <tr>
+            <td>Subject Hash:</td><td colspan="2"><input id="subjHash" size="40" readonly></td>
+          </tr>
+        </table>
+    </td>
+  </tr>
+  <tr>
+    <td><textarea id="clearText" style="width:100%" rows="20"></textarea></td>
+  </tr>
+  <tr>
+    <td><button onclick="doEncrypt()">Encrypt</button>&nbsp;<button onclick="doDecrypt()">Decrypt</button></td>
+  </tr>
+  <tr>
+    <td><textarea id="encryptedText" style="width:100%" rows="20"></textarea></td>
+  </tr>
+</table>
+</body>
+
+</html>

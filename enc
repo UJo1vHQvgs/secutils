@@ -1,0 +1,49 @@
+#!/bin/bash
+
+echo -n 'Subject: '
+read -s SUBJECT
+
+echo
+if [ "" = "${ENC_PASSWD}" ] ; then
+   echo -n 'Password: '
+   read -s PASSWD
+   echo
+else
+   echo
+   echo Using env variable ENC_PASSWD
+   PASSWD=${ENC_PASSWD}
+fi
+
+
+SUBJ_HASH=`echo -n ${SUBJECT}${PASSWD} | md5sum | cut -c 1-32`
+
+AES_KEY=`echo -n ${SUBJ_HASH} | sha256sum | cut -c 1-64`
+
+echo
+echo SUBJ_HASH = ${SUBJ_HASH}
+echo AES_KEY = ${AES_KEY}
+echo
+
+
+ENC_FILE=${SUBJ_HASH}.dat
+TMP_FILE=${SUBJ_HASH}.tmp
+
+if [ -f ${ENC_FILE} ] ; then
+  echo File ${ENC_FILE} already exists
+  echo
+  exit 0
+fi
+
+echo -n "Create file ${ENC_FILE}? "
+read CREATE_FILE_YN
+echo
+
+if [ "Y" = "${CREATE_FILE_YN}" ] || [ "y" = "${CREATE_FILE_YN}" ] ; then
+  vi +startinsert ${TMP_FILE}
+  if [ -f ${TMP_FILE} ] ; then
+    openssl aes-256-cbc -a -md md5 -k ${AES_KEY} -in ${TMP_FILE} -out ${ENC_FILE}
+    shred -u ${TMP_FILE}
+    exit 0
+  fi
+  echo Temp file not found.
+fi

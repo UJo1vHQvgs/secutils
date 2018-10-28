@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo -n 'Subject: '
+read -s SUBJECT
+
+echo
+if [ "" = "${ENC_PASSWD}" ] ; then
+   echo
+   echo -n 'Password: '
+   read -s PASSWD
+else
+   echo Using env variable ENC_PASSWD
+   PASSWD=${ENC_PASSWD}
+fi
+
+
+SUBJ_HASH=`echo -n ${SUBJECT}${PASSWD} | md5sum | cut -c 1-32`
+
+AES_KEY=`echo -n ${SUBJ_HASH} | sha256sum | cut -c 1-64`
+
+echo
+echo SUBJ_HASH = ${SUBJ_HASH}
+echo AES_KEY = ${AES_KEY}
+echo
+
+DAT_DIR=.
+if [ "" != "${SEC_DAT_DIR}" ] ; then
+  DAT_DIR=${SEC_DAT_DIR}
+fi
+
+ENC_FILE=${SEC_DAT_DIR}/${SUBJ_HASH}.dat
+if [ ! -f ${ENC_FILE} ] ; then
+  echo
+  echo Cannot open file ${ENC_FILE}
+  exit 1
+fi
+
+openssl aes-256-cbc -d -a -md md5 -in ${ENC_FILE} -k ${AES_KEY}
