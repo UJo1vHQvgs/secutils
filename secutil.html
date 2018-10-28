@@ -50,7 +50,8 @@ function lineLength(text) {
 function generateAesKey() {
   var subject = document.getElementById('subject').value;
   var password = document.getElementById('password').value;
-  var subjHash = CryptoJS.MD5(subject+password).toString();
+  var key1 = CryptoJS.SHA256(subject+password).toString();
+  var subjHash = CryptoJS.MD5(key1).toString();
   console.log('subject = ' + subject + ', subjHash = ' + subjHash);
   document.getElementById('subjHash').value = subjHash;
   var aesKey = CryptoJS.SHA256(subjHash).toString();
