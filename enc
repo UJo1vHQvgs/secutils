@@ -1,31 +1,59 @@
 #!/bin/bash
 
+unameThis=`uname -s`
+function hash5 {
+  if [ "Darwin" = "${unameThis}" ] ; then
+    echo -n $1 | md5
+  else
+    echo -n $1 | md5sum | cut -c 1-32
+  fi
+}
+
+function hash256 {
+  if [ "Darwin" = "${unameThis}" ] ; then
+    echo -n $1 | shasum -a 256 | cut -c 1-64
+  else
+    echo -n $1 | sha256sum | cut -c 1-64
+  fi
+}
+
+function b64 {
+  if [ "Darwin" = "${unameThis}" ] ; then
+    echo -n $1 | base64
+  else
+    echo -n $1 | base64 -w 0
+  fi
+}
+
 echo -n 'Subject: '
 read SUBJECT
 
-echo
 if [ "" = "${ENC_PASSWD}" ] ; then
    echo -n 'Password: '
    read -s PASSWD
-   echo
 else
-   echo
    echo Using env variable ENC_PASSWD
    PASSWD=${ENC_PASSWD}
 fi
 
-KEY1=`echo -n ${SUBJECT}${PASSWD} | sha256sum | cut -c 1-64`
-SUBJ_HASH=`echo -n ${KEY1} | md5sum | cut -c 1-32`
+KEY1=`hash256 ${SUBJECT}${PASSWD}`
+SUBJ_HASH=`hash5 ${KEY1}`
 
-AES_KEY=`echo -n ${SUBJ_HASH} | sha256sum | cut -c 1-64`
+AES_KEY=`hash256 ${SUBJ_HASH}`
+echo
+echo AES_KEY = ${AES_KEY}
+AES_KEY=`b64 ${AES_KEY}`
 
 echo
 echo SUBJ_HASH = ${SUBJ_HASH}
 echo AES_KEY = ${AES_KEY}
 echo
 
+if [ "" = "${SEC_DAT_DIR}" ] ; then
+  SEC_DAT_DIR=.
+fi
 
-ENC_FILE=${SUBJ_HASH}.dat
+ENC_FILE=${SEC_DAT_DIR}/${SUBJ_HASH}.dat
 TMP_FILE=${SUBJ_HASH}.tmp
 
 if [ -f ${ENC_FILE} ] ; then

@@ -52,9 +52,11 @@ function generateAesKey() {
   var password = document.getElementById('password').value;
   var key1 = CryptoJS.SHA256(subject+password).toString();
   var subjHash = CryptoJS.MD5(key1).toString();
-  console.log('subject = ' + subject + ', subjHash = ' + subjHash);
   document.getElementById('subjHash').value = subjHash;
   var aesKey = CryptoJS.SHA256(subjHash).toString();
+  console.log('aesKey = ' + aesKey );
+  var wordArray = CryptoJS.enc.Utf8.parse(aesKey);
+  aesKey = CryptoJS.enc.Base64.stringify(wordArray);
   document.getElementById('aesKey').value = aesKey;
 }
 </script>
